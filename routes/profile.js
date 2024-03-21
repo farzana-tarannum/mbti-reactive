@@ -20,16 +20,18 @@ const router = express.Router();
 // ];
 
 module.exports = function (Profile) {
+
   // GET route to retrieve profile by ID
-  router.get('/:id', async function (req, res, next) {
-    console.log(req.params.id);
+  router.get('/:profileId', async function (req, res, next) {
+    let profileId = new String(req.params.profileId)
+    console.log('=> requested profileId: ' + profileId);
     try {
-      const profile = await Profile.findById(req.params.id);
+      const profile = await Profile.findById(profileId);
       console.log(profile);
       if (!profile) {
         return res.status(404).send('Profile not found');
       }
-      res.send(profile);
+      res.render('profile_template', {profile});
     } catch (error) {
       next(error);
     }
@@ -37,10 +39,10 @@ module.exports = function (Profile) {
 
   // POST route to create a new profile
   router.post('/', async function (req, res, next) {
-    console.log(req.body);
+    console.log(`=> requested body: ${new Profile(req.body)}`);
     try {
       const profile = new Profile(req.body);
-      console.log(profile);
+      console.log('=> retrieved profile data: ' + profile);
       await profile.save();
       res.status(201).send(profile);
     } catch (error) {
@@ -49,6 +51,8 @@ module.exports = function (Profile) {
   });
 
   router.post('/:profileId/comments', async (req, res, next) => {
+    let profileId = new String(req.params.profileId)
+    console.log('=> requested profileId: ' + profileId);
     try {
       const profile = await Profile.findById(req.params.profileId);
       if (!profile) {

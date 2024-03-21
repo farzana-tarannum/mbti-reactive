@@ -3,7 +3,7 @@
 const express = require('express');
 const connect = require('./database/conn');
 const Profile = require('./models/profileModel');
-
+const User = require('./models/user.model');
 
 const app = express();
 const port = process.env.PORT || 3000;
