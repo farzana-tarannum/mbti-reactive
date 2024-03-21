@@ -23,7 +23,7 @@ const router = express.Router();
 module.exports = function (Profile, User) {
 
   // GET route to retrieve profile by ID
-  router.get('/:profileId', async function (req, res, next) {
+  router.get('/profiles/:profileId', async function (req, res, next) {
     let profileId = new String(req.params.profileId)
     console.log('=> requested profileId: ' + profileId);
     try {
@@ -39,7 +39,7 @@ module.exports = function (Profile, User) {
   });
 
   // POST route to create a new profile
-  router.post('/', async function (req, res, next) {
+  router.post('/profiles', async function (req, res, next) {
     console.log(`=> requested body: ${new Profile(req.body)}`);
     try {
       const profile = new Profile(req.body);
@@ -53,7 +53,7 @@ module.exports = function (Profile, User) {
 
 
     // create user
-    router.post('/user', async function (req, res, next) {
+    router.post('/users', async function (req, res, next) {
       try {
         const { name } = req.body;
         console.log('=> requested name: ' + name);
@@ -68,7 +68,7 @@ module.exports = function (Profile, User) {
     });
 
     // get users
-    router.get('/user/:userId', async function (req, res, next) {
+    router.get('/users/:userId', async function (req, res, next) {
       let userId = new String(req.params.userId)
       console.log('=> requested profileId: ' + userId);
       try {
@@ -128,7 +128,7 @@ module.exports = function (Profile, User) {
 
 
 
-  router.get('/:profileId/comments-sorting', async (req, res, next) => {
+  router.get('/:profileId/comments/sorting', async (req, res, next) => {
     try {
       const profile = await Profile.findById(req.params.profileId);
       if (!profile) {
@@ -138,12 +138,14 @@ module.exports = function (Profile, User) {
       let comments = profile.comments;
   
       // Sort comments by createdAt in descending order to get most recent comments first
-      comments.sort((a, b) => {
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
+      if (req.query.sortBy === 'recent') {
+        comments.sort((a, b) => {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+      }
   
       // Sort comments by number of likes if query parameter is provided
-      if (req.query.sortBy === 'likes') {
+      if (req.query.sortBy === 'best') {
         comments.sort((a, b) => {
           return b.likes.length - a.likes.length;
         });
@@ -156,7 +158,7 @@ module.exports = function (Profile, User) {
   });
 
 
-  router.post('/:profileId/comments/:commentId/toggleLike/:userId', async (req, res, next) => {
+  router.get('/:profileId/comments/:commentId/toggleLike/:userId', async (req, res, next) => {
     try {
       const profile = await Profile.findById(req.params.profileId);
       if (!profile) {
