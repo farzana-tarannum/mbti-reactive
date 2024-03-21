@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const User = require('../models/user.model');
 const router = express.Router();
 
 // const profiles = [
@@ -19,7 +20,7 @@ const router = express.Router();
 //   }
 // ];
 
-module.exports = function (Profile) {
+module.exports = function (Profile, User) {
 
   // GET route to retrieve profile by ID
   router.get('/:profileId', async function (req, res, next) {
@@ -50,29 +51,60 @@ module.exports = function (Profile) {
     }
   });
 
-  router.post('/:profileId/comments', async (req, res, next) => {
-    let profileId = new String(req.params.profileId)
-    console.log('=> requested profileId: ' + profileId);
-    try {
-      const profile = await Profile.findById(req.params.profileId);
-      if (!profile) {
-        return res.status(404).send('Profile not found');
+
+    // create user
+    router.post('/user', async function (req, res, next) {
+      try {
+        const { name } = req.body;
+        console.log('=> requested name: ' + name);
+        const user = new User({ name });    
+        await user.save();
+        console.log(user);
+    
+        res.status(201).json(user);
+      } catch (error) {
+        next(error);
       }
+    });
 
-      const comment = {
-        text: req.body.text,
-        user: req.body.userName,
-        personalitySystem: req.body.personalitySystem
-      };
+    // get users
+    router.get('/user/:userId', async function (req, res, next) {
+      let userId = new String(req.params.userId)
+      console.log('=> requested profileId: ' + userId);
+      try {
+        const user = await User.findById(userId);
+        if (!user) {
+          return res.status(404).send('User not found');
+        }
 
-      profile.comments.push(comment);
-      await profile.save();
+        res.send(user)
+      } catch (error) {
+        next(error);
+      }
+    });
 
-      res.status(201).json(comment);
-    } catch (error) {
-      next(error);
-    }
-  });
+    router.post('/:profileId/comments', async (req, res, next) => {
+      try {
+        const profile = await Profile.findById(req.params.profileId);
+        if (!profile) {
+          return res.status(404).send('Profile not found');
+        }
+    
+        const comment = {
+          text: req.body.text,
+          user: req.body.userName,
+          personalitySystem: req.body.personalitySystem,
+          votes: req.body.votes // Array of voting options [{ system: 'MBTI', values: ['value1', 'value2'] }, ...]
+        };
+    
+        profile.comments.push(comment);
+        await profile.save();
+    
+        res.status(201).json(comment);
+      } catch (error) {
+        next(error);
+      }
+    });
 
   router.get('/:profileId/comments', async (req, res, next) => {
     try {
@@ -102,39 +134,55 @@ module.exports = function (Profile) {
       if (!profile) {
         return res.status(404).send('Profile not found');
       }
-
+  
+      let comments = profile.comments;
+  
       // Sort comments by createdAt in descending order to get most recent comments first
-      profile.comments.sort((a, b) => {
-        return b.createdAt - a.createdAt;
+      comments.sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt);
       });
-
-      res.json(profile.comments);
+  
+      // Sort comments by number of likes if query parameter is provided
+      if (req.query.sortBy === 'likes') {
+        comments.sort((a, b) => {
+          return b.likes.length - a.likes.length;
+        });
+      }
+  
+      res.json(comments);
     } catch (error) {
       next(error);
     }
   });
 
 
-  router.post('/:profileId/comments/:commentId/like', async (req, res, next) => {
+  router.post('/:profileId/comments/:commentId/toggleLike/:userId', async (req, res, next) => {
     try {
       const profile = await Profile.findById(req.params.profileId);
       if (!profile) {
         return res.status(404).send('Profile not found');
       }
-
+  
       const comment = profile.comments.id(req.params.commentId);
       if (!comment) {
         return res.status(404).send('Comment not found');
       }
-
-      comment.likes += 1;
+  
+      const index = comment.likes.indexOf(req.params.userId);
+      if (index === -1) {
+        comment.likes.push(req.params.userId);
+      } else {
+        comment.likes.splice(index, 1);
+      }
+  
       await profile.save();
-
-      res.json(comment);
+  
+      res.status(200).send(profile);
     } catch (error) {
       next(error);
     }
   });
+  
 
 
   return router;

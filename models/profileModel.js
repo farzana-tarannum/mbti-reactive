@@ -2,11 +2,16 @@ const mongoose = require('mongoose');
 
 const commentSchema = new mongoose.Schema({
     text: String,
-    user: String, 
-    likes: { type: Number, default: 0 },
+    user: String,
+    votes: [
+      {
+        system: { type: String, enum: ['MBTI', 'Enneagram', 'Zodiac'] },
+        value: String // Array of selected values for the system
+      }
+    ],
     personalitySystem: String,
-    createdAt: { type: Date, default: Date.now } 
-});
+    createdAt: { type: Date, default: Date.now }
+  });
 
 // Set up mongoose models and schema
 const profileSchema = new mongoose.Schema({

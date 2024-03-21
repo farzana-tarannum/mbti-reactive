@@ -19,16 +19,20 @@
 // //   }
 // // ];
 
-// module.exports = function (User) {
+// module.exports = function (Profile, User) {
 
 //   //
-//   router.post("/", async () => {
-//     let userName = req.body;
+//   router.post("/user", async (req, res, next) => {
+//     // let userName = req.body;
     
-//     try {
-
+//     try {     
+//         const user = new User(req.body);
+//         await user.save()   
+//         res.status(201).send(user);
+//     }catch(err) {
+//         console.log(err);
 //     }
-//   } )
+//   })
 //   return router;
 // };
 

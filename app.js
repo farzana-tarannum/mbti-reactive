@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // routes
-app.use('/', require('./routes/profile')(Profile));
+app.use('/', require('./routes/profile')(Profile, User));
 
 connect().then(() => {
     try {
