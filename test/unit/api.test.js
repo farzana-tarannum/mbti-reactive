@@ -6,9 +6,12 @@ const api = supertest(app);
 
 // Constants
 const PROFILE_END_POINT = "/profiles";
-const INVALID_PROFILE_ID = "invalidProfileId";
 const USER_END_POINT = "/users";
+const COMMENT_END_POINT = "/comments";
+
+const INVALID_PROFILE_ID = "invalidProfileId";
 const INVALID_USER_ID = "invalidUserId";
+const INVALID_COMMENT_ID = "invalidCommentId";
 
 const newProfile = {
   name: "John Doe",
@@ -25,6 +28,26 @@ const newProfile = {
 
 const userData = { name: "John Doe" };
 
+const commentData = {
+  text: "this my 1",
+  user: "salman",
+  personalitySystem: "enneagram",
+  votes: [
+    {
+      system: "MBTI",
+      value: "INTP",
+    },
+    {
+      system: "Enneagram",
+      value: "1w2",
+    },
+    {
+      system: "Zodiac",
+      value: "Virgo",
+    },
+  ],
+};
+
 // Helper function to generate random string
 function generateRandomString(length) {
   return crypto.randomBytes(length).toString("hex");
@@ -36,6 +59,10 @@ async function newProfileCreate() {
 
 async function newUserCreate() {
   return api.post(USER_END_POINT).send(userData);
+}
+
+async function newCommentCreate(profileId) {
+  return api.post(`/${profileId}${COMMENT_END_POINT}`).send(commentData);
 }
 
 describe("Profile API Testing with Supertest", () => {
@@ -101,5 +128,40 @@ describe("User API Testing with Supertest", () => {
       `${USER_END_POINT}/${generateRandomString(12)}`
     );
     expect(unknownUserResponse.status).toEqual(404);
+  });
+});
+
+describe("Comment API Testing with Supertest", () => {
+  // Comment creation test
+  it("should create a new comment and retrieve it", async () => {
+    //create profile
+    const profileCreateResponse = await newProfileCreate();
+    const profileId = profileCreateResponse.body._id;
+
+    // Create a new comment
+    const createResponse = await newCommentCreate(profileId);
+    expect(createResponse.status).toEqual(201);
+
+    // Check response body contains the created comment's data
+    expect(createResponse.body.text).toEqual(commentData.text);
+
+    // Retrieve the created comment
+    const retrieveResponse = await api.get(
+      `/${profileId}${COMMENT_END_POINT}?personalitySystem=ALL`
+    );
+    expect(retrieveResponse.status).toEqual(200);
+    expect(retrieveResponse.body[0].user).toEqual(commentData.user);
+
+    // invalid profile check
+    const invalidProfileResponse = await api.get(
+      `/${INVALID_PROFILE_ID}${COMMENT_END_POINT}?personalitySystem=ALL`
+    );
+    expect(invalidProfileResponse.status).toEqual(400);
+
+    // unknown profile check
+    const unknownProfileResponse = await api.get(
+      `/${generateRandomString(12)}${COMMENT_END_POINT}?personalitySystem=ALL`
+    );
+    expect(unknownProfileResponse.status).toEqual(404);
   });
 });
