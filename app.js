@@ -1,35 +1,34 @@
-'use strict';
+"use strict";
 
-const express = require('express');
-const connect = require('./database/conn');
-const Profile = require('./models/profileModel');
-const User = require('./models/user.model');
+const express = require("express");
+const connect = require("./database/conn");
+const Profile = require("./models/profileModel");
+const User = require("./models/user.model");
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // set the view engine to ejs
-app.set('view engine', 'ejs');
+app.set("view engine", "ejs");
 
-
-app.use(express.json()); 
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
 // routes
-app.use('/', require('./routes/profile')(Profile, User));
+app.use("/", require("./routes/profile")(Profile, User));
 
-connect().then(() => {
+connect()
+  .then(() => {
     try {
-        // start server
-        const server = app.listen(port);
-        console.log('Express started. Listening on %s', port);
+      // start server
+      const server = app.listen(port);
+      console.log("Express started. Listening on %s", port);
     } catch (er) {
-        console.log("Can't connect to the server");
+      console.log("Can't connect to the server");
     }
-
-}).catch((error) => {
+  })
+  .catch((error) => {
     console.log("Invalid database connection");
-})
+  });
 
-
+module.exports = app;
