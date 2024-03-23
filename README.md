@@ -1,13 +1,12 @@
-# Boo Assessment
+# Boo
 
-## Project Description
+## Project description
 
-project description should be here......
+The platform enables users to create profiles, explore other users' profiles, and engage in meaningful interactions through comments and voting on specific points within those profiles.
 
 ## Prerequisites
 
-- Node.js (16._._)
-- MongoDB
+- Node.js (16+)
 
 ## Steps to run the project
 
@@ -18,7 +17,9 @@ project description should be here......
 
 3. Type `npm start` to start the server.
 
-4. The application would be run on http://127.0.0.1:5173/
+4. The application would be run on `http://localhost:3000/`
+
+5. MongoDB would be run on `mongodb://127.0.0.1:{port_number}/` (port_number will be changed everytime after start the server)
 
 ## Steps to run the test
 
@@ -27,20 +28,13 @@ project description should be here......
 
 ## List of implemented features
 
-- Register and Login User
-- Each user gets a unique avatar
-- Users can only register with NITK email id
-- Different roles like Admin, Internship Coordinator, Placement Coordinator and User.
-- List of categories with ability to add and delete category for the admin
-- List of Users with their information
-- Admin can change allowed categories for each user and handle their roles and status.
-- Internship and Placement coordinators can edit the User status.
-- User Dashboard where a user can see the categories he can write about and the gyans he has already wrote.
-- List of Gyans
-- Seperate page for each Gyan with an accordion
-- Forms to add and edit gyans
-- Pagination on the Gyan Page
-- Filtering based on category and User branch
+- Profile Creation
+- Retrieve Profile by ID
+- Commenting and Voting Functionality
+- Retrieve Comments
+- Like/Unlike Comments
+- User Creation with Viewing, Voting, and Commenting Privileges
+- Retrieve User Profile by ID
 
 ## Postman collection
 
