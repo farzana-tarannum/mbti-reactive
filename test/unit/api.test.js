@@ -164,4 +164,85 @@ describe("Comment API Testing with Supertest", () => {
     );
     expect(unknownProfileResponse.status).toEqual(404);
   });
+
+  describe("Comment like Testing with Supertest", () => {
+    // comment like test
+    it("should like and unlike a comment", async () => {
+      const newProfileCreateResponse = await newProfileCreate();
+      const newProfileId = newProfileCreateResponse.body._id;
+      const newUserCreateResponse = await newUserCreate();
+      const newUserId = newUserCreateResponse.body._id;
+      await newCommentCreate(newProfileId);
+      const retrieveCreatedCommentResponse = await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}?personalitySystem=ALL`
+      );
+      const commentId = retrieveCreatedCommentResponse.body[0]._id;
+      const commentLikeResponse = await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/${commentId}/toggleLike/${newUserId}`
+      );
+
+      console.log(commentLikeResponse.body.comments[0]?.likes);
+      expect(
+        commentLikeResponse.body.comments[0]?.likes.includes(newUserId)
+      ).toEqual(true);
+
+      // unlike comment
+      const commentUnlikeResponse = await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/${commentId}/toggleLike/${newUserId}`
+      );
+
+      console.log(commentUnlikeResponse.body.comments[0]?.likes);
+      expect(
+        commentUnlikeResponse.body.comments[0]?.likes.includes(newUserId)
+      ).toEqual(false);
+
+      // invalid profile id test
+      const invalidProfileIdResponse = await api.get(
+        `/${INVALID_PROFILE_ID}${COMMENT_END_POINT}/${commentId}/toggleLike/${newUserId}`
+      );
+
+      expect(invalidProfileIdResponse.status).toEqual(400);
+
+      // unknown profile id test
+      const unknownProfileIdResponse = await api.get(
+        `/${generateRandomString(
+          12
+        )}${COMMENT_END_POINT}/${commentId}/toggleLike/${newUserId}`
+      );
+
+      expect(unknownProfileIdResponse.status).toEqual(404);
+
+      // invalid comment id test
+      const invalidCommentIdResponse = await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/${INVALID_COMMENT_ID}/toggleLike/${newUserId}`
+      );
+
+      expect(invalidCommentIdResponse.status).toEqual(400);
+
+      // unknown comment id test
+      const unknownCommentIdResponse = await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/${generateRandomString(
+          12
+        )}/toggleLike/${newUserId}`
+      );
+
+      expect(unknownCommentIdResponse.status).toEqual(404);
+
+      // invalid user id test
+      const invalidUserIdResponse = await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/${commentId}/toggleLike/${INVALID_USER_ID}`
+      );
+
+      expect(invalidUserIdResponse.status).toEqual(400);
+
+      // unknown user id test
+      const unknownUserIdResponse = await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/${commentId}/toggleLike/${generateRandomString(
+          12
+        )}`
+      );
+
+      expect(unknownUserIdResponse.status).toEqual(404);
+    });
+  });
 });
