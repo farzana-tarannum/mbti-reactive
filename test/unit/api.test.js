@@ -245,4 +245,145 @@ describe("Comment API Testing with Supertest", () => {
       expect(unknownUserIdResponse.status).toEqual(404);
     });
   });
+
+  describe("Comment Sort Testing with Supertest", () => {
+    it("recent comment test", async () => {
+      const firstComment = "this is first comment";
+      const secondComment = "this is second comment";
+      const thirdComment = "this is second comment";
+      const bestComment = "this is the best comment";
+      const mostRecentComment = "this is the most recent comment";
+
+      commentData.text = firstComment;
+
+      const newProfileCreateResponse = await newProfileCreate();
+      const newProfileId = newProfileCreateResponse.body._id;
+      const newUserCreateResponse = await newUserCreate();
+      const newUserId = newUserCreateResponse.body._id;
+      await newCommentCreate(newProfileId);
+
+      commentData.text = secondComment;
+      await newCommentCreate(newProfileId);
+
+      commentData.text = thirdComment;
+      await newCommentCreate(newProfileId);
+
+      commentData.text = bestComment;
+      await newCommentCreate(newProfileId);
+
+      commentData.text = mostRecentComment;
+      await newCommentCreate(newProfileId);
+
+      const retrieveCreatedCommentResponse = await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/sorting?sortBy=recent`
+      );
+      expect(retrieveCreatedCommentResponse.status).toEqual(200);
+      expect(retrieveCreatedCommentResponse.body[0].text).toEqual(
+        mostRecentComment
+      );
+      expect(retrieveCreatedCommentResponse.body[1].text).toEqual(bestComment);
+      expect(retrieveCreatedCommentResponse.body[2].text).toEqual(thirdComment);
+      expect(retrieveCreatedCommentResponse.body[3].text).toEqual(
+        secondComment
+      );
+      expect(retrieveCreatedCommentResponse.body[4].text).toEqual(firstComment);
+    });
+    it("best comment test", async () => {
+      const firstComment = "this is first comment";
+      const secondComment = "this is second comment";
+      const thirdComment = "this is third comment";
+      const bestComment = "this is the best comment";
+      const mostRecentComment = "this is the most recent comment";
+
+      commentData.text = firstComment;
+
+      const newProfileCreateResponse = await newProfileCreate();
+      const newProfileId = newProfileCreateResponse.body._id;
+      const userOneCreateResponse = await api
+        .post(USER_END_POINT)
+        .send({ name: "User1" });
+      const userTwoCreateResponse = await api
+        .post(USER_END_POINT)
+        .send({ name: "User2" });
+
+      const userOneId = userOneCreateResponse.body._id;
+      const userTwoId = userTwoCreateResponse.body._id;
+
+      await newCommentCreate(newProfileId);
+
+      commentData.text = secondComment;
+      await newCommentCreate(newProfileId);
+
+      commentData.text = thirdComment;
+      await newCommentCreate(newProfileId);
+
+      commentData.text = bestComment;
+      await newCommentCreate(newProfileId);
+
+      commentData.text = mostRecentComment;
+      await newCommentCreate(newProfileId);
+
+      // fetch all comments
+      const allCommentFetchResponse = await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}?personalitySystem=ALL`
+      );
+      let bestCommentId;
+      let firstCommentId;
+
+      allCommentFetchResponse.body.forEach((comment) => {
+        if (bestComment === comment.text) {
+          bestCommentId = comment._id;
+        } else if (firstComment === comment.text) {
+          firstCommentId = comment._id;
+        }
+      });
+
+      // userOne liked best comment
+      await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/${bestCommentId}/toggleLike/${userOneId}`
+      );
+
+      // userTwo liked best comment
+      await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/${bestCommentId}/toggleLike/${userTwoId}`
+      );
+
+      // userTwo liked first comment
+      await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/${firstCommentId}/toggleLike/${userTwoId}`
+      );
+
+      const retrieveCreatedCommentResponse = await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/sorting?sortBy=best`
+      );
+
+      // best comment 2 likes, first comment 1 like
+      expect(retrieveCreatedCommentResponse.status).toEqual(200);
+      expect(retrieveCreatedCommentResponse.body[0].text).toEqual(bestComment);
+      expect(retrieveCreatedCommentResponse.body[1].text).toEqual(firstComment);
+
+      // userOne un-liked best comment
+      await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/${bestCommentId}/toggleLike/${userOneId}`
+      );
+
+      // userOne liked first comment
+      await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/${firstCommentId}/toggleLike/${userOneId}`
+      );
+
+      // now best comment has one like and first comment has 2 likes
+      const retrieveAfterChangingRankingCommentResponse = await api.get(
+        `/${newProfileId}${COMMENT_END_POINT}/sorting?sortBy=best`
+      );
+
+      expect(retrieveAfterChangingRankingCommentResponse.status).toEqual(200);
+      expect(retrieveAfterChangingRankingCommentResponse.body[0].text).toEqual(
+        firstComment
+      );
+      expect(retrieveAfterChangingRankingCommentResponse.body[1].text).toEqual(
+        bestComment
+      );
+    });
+  });
 });
